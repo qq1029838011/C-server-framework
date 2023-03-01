@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <memory>
 #include <list>
+#include <fstream>
 namespace server{
 
 //日志事件
@@ -41,15 +42,20 @@ public:
 	std::string format(LogEvent::ptr event);
 };
 
-//日志输出地
+//日志输出地G
 class LogAppender {
 public:
 	typedef std::shared_ptr<LogAppender> ptr;
 	virtual ~LogAppender() {}
 
-	void log(LogLevel::Level level,LogEvent::ptr event);
+	virtual void log(LogLevel::Level level,LogEvent::ptr event) = 0;
+
+	void setFormatter(LogFormatter::ptr val) {m_formatter = val; }
+	LogFormatter::ptr getFormatter() const { return m_formatter; }
+
 private:
 	LogLevel::Level m_level;
+	LogFormatter::ptr m_formatter;
 };
 
 //日志器
@@ -81,12 +87,20 @@ private:
 //输出到控制台
 class StdoutLogAppender: public LogAppender {
 public:
-
+	typedef std::shared_ptr<StdoutLogAppender> ptr;
+	void log(LogLevel::Level level,LogEvent::ptr event);
 };
 
 //输出到文件
 class FileLogAppender: public LogAppender {
 public:
-
+	typedef shared_ptr<FileLogAppender> ptr;
+	FileLogAppender(){};
+	FileLogAppender(const std::string& filename);
+	void log(LogLevel::Level level,LogEvent::ptr event);
+	bool reopen();
+private:
+	std::string m_filename;
+	std::ofstream m_filestream;
 };
 }
